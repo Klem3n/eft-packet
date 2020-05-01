@@ -27,8 +27,8 @@
 #define GLT_IMPLEMENTATION
 #include "gltext.h"
 
-#define LOCAL_ADAPTER_IP_ADDRESS "fill.me.in" // ipconfig in cmd prompt on cheat machine, find local address, fill it in here
-#define MACHINE_PLAYING_GAME_IP_ADDRESS "fill.me.in" // the local IP address of the machine communicating with EFT servers
+#define LOCAL_ADAPTER_IP_ADDRESS "192.168.0.18" // ipconfig in cmd prompt on cheat machine, find local address, fill it in here
+#define MACHINE_PLAYING_GAME_IP_ADDRESS "192.168.0.27" // the local IP address of the machine communicating with EFT servers
 
 struct Packet
 {
@@ -148,7 +148,7 @@ int SDL_main(int argc, char* argv[])
                 uint8_t* data_start = udp->getDataPtr(udp->getHeaderLen());
 
                 int timestamp = (int)(GetTickCount() - s_base_time);
-                bool outbound = src_ip == MACHINE_PLAYING_GAME_IP_ADDRESS;
+                bool outbound = src_ip == MACHINE_PLAYING_GAME_IP_ADDRESS || src_ip._Starts_with("192");
                 std::vector<uint8_t> data;
                 data.resize(len);
                 memcpy(data.data(), data_start, len);
@@ -571,10 +571,27 @@ void do_render(GraphicsState* gfx)
                         {
                             r = 255;
                             g = obs->is_dead ? 140 : 255;
+
+                            std::string data = obs->name;
+                            std::transform(data.begin(), data.end(), data.begin(),
+                                [](unsigned char c) { return std::tolower(c); });
+
+                            if (data.find("scavassault") == std::string::npos) {
+                                r = 3;
+                                g = 15;
+                                b = 252;
+                            }
                         }
                         else
                         {
                             r = obs->is_dead ? 139 : 255;
+
+                            if (obs->type == tk::Observer::Scav)
+                            {
+                                r = 3;
+                                g = 223;
+                                b = 252;
+                            }
                         }
                     }
 
@@ -608,6 +625,25 @@ void do_render(GraphicsState* gfx)
                 for (Vector3* pos : tk::g_state->map->get_static_corpses())
                 {
                     draw_box(pos->x, pos->y, pos->z, 2.0f, 1.0f, 1.0f, 102, 0, 102);
+                }
+
+                auto draw_2d_text = [&gfx]
+                (float x, float y, float scale, const char* txt, int r, int g, int b, int a)
+                {
+                    GLTtext* text = gltCreateText();
+                    gltSetText(text, txt);
+                    gltBeginDraw();
+                    gltColor(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+                    gltDrawText2D(text, x, y, scale);
+                    gltEndDraw();
+                    gltDeleteText(text);
+                };
+
+                if (tk::specialscavs) {
+                    draw_2d_text(10, 10, 1.0f, "Special scavs", 40, 255, 0, 200);
+                }
+                else {
+                    draw_2d_text(10, 10, 1.0f, "NO special scavs", 255, 40, 0, 200);
                 }
 
                 std::vector<std::tuple<Vector3, std::string, int, int, int>> loot_text_to_render;

@@ -13,6 +13,8 @@ namespace tk
     class ByteStream;
     void process_packet(ByteStream* stream, uint8_t len, bool outbound);
 
+    static bool specialscavs = false;
+
     enum PacketCode : int16_t
     {
         ServerInit = 147,

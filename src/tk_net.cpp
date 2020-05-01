@@ -80,7 +80,7 @@ namespace tk
             // json
             auto unk2 = stream->ReadBytesAndSize();
         }
-        
+
         {
             // json
             auto unk3 = stream->ReadBytesAndSize();
@@ -226,6 +226,10 @@ namespace tk
             {
                 info_name = "Scav";
                 info_name += info_role;
+
+                if(info_name.find("Scavassault") != std::string::npos){
+                    tk::specialscavs = true;
+                }
             }
 
             obs.type = is_scav ? Observer::Scav : Observer::Player;
@@ -355,9 +359,10 @@ namespace tk
             bstream.ReadLimitedInt32(0, 63);
         }
 
-        if (bstream.ReadBool())
-        {
-            bstream.ReadLimitedInt32(0, 8);
+        if (bstream.ReadBool()) {
+            Vector2Quantizer quant(-1.0f, 1.0f, 0.03125f, -1.0f, 1.0f, 0.03125f);
+            bstream.ReadQuantizedFloat(&quant._xFloatQuantizer);
+            bstream.ReadQuantizedFloat(&quant._yFloatQuantizer);
         }
 
         if (bstream.ReadBool())
